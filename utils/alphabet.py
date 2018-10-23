@@ -70,7 +70,7 @@ class Alphabet:
         return len(self.instances) + 1
 
     def iteritems(self):
-        return self.instance2index.iteritems()
+        return self.instance2index.items()
 
     def enumerate_items(self, start=1):
         if start < 1 or start >= self.size():
@@ -99,7 +99,8 @@ class Alphabet:
         """
         saving_name = name if name else self.__name
         try:
-            json.dump(self.get_content(), open(os.path.join(output_directory, saving_name + ".json"), 'w'))
+            with open(os.path.join(output_directory, saving_name + ".json"), 'w') as f:
+                json.dump(self.get_content(), f)
         except Exception as e:
             print("Exception: Alphabet is not saved: " % repr(e))
 
@@ -111,4 +112,5 @@ class Alphabet:
         :return:
         """
         loading_name = name if name else self.__name
-        self.from_json(json.load(open(os.path.join(input_directory, loading_name + ".json"))))
+        with open(os.path.join(input_directory, loading_name + ".json")) as f:
+            self.from_json(json.load(f))
