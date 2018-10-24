@@ -9,9 +9,9 @@ Details will be updated soon.
 
 Requirement:
 ======
-	Python: 2.7   
-	PyTorch: 0.3.0 
-(for PyTorch 0.3.1, please refer [issue#8](https://github.com/jiesutd/LatticeLSTM/issues/8) for a slight modification.)
+	Python: 3.6.5 
+	PyTorch: 0.4.1 
+(for PyTorch 0.3.1 (and 0.4.1), please refer [issue#8](https://github.com/jiesutd/LatticeLSTM/issues/8) for a slight modification.)
 
 Input format:
 ======

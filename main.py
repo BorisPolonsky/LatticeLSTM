@@ -113,7 +113,7 @@ def load_data_setting(save_file):
 
 def lr_decay(optimizer, epoch, decay_rate, init_lr):
     lr = init_lr * ((1-decay_rate)**epoch)
-    print(" Learning rate is setted as:", lr)
+    print(" Learning rate is set as:", lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     return optimizer
@@ -184,10 +184,17 @@ def batchify_with_label(input_batch_list, gpu, volatile_flag=False):
     labels = [sent[4] for sent in input_batch_list]
     word_seq_lengths = torch.LongTensor(list(map(len, words)))
     max_seq_len = word_seq_lengths.max()
-    word_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile =  volatile_flag).long()
-    biword_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile =  volatile_flag).long()
-    label_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)),volatile =  volatile_flag).long()
-    mask = autograd.Variable(torch.zeros((batch_size, max_seq_len)),volatile =  volatile_flag).byte()
+    """
+    word_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile=volatile_flag).long()
+    biword_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile=volatile_flag).long()
+    label_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile=volatile_flag).long()
+    mask = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile=volatile_flag).byte()
+    """
+    with torch.set_grad_enabled(not volatile_flag):
+        word_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len))).long()
+        biword_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len))).long()
+        label_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len))).long()
+        mask = autograd.Variable(torch.zeros((batch_size, max_seq_len))).byte()
     for idx, (seq, biseq, label, seqlen) in enumerate(zip(words, biwords, labels, word_seq_lengths)):
         word_seq_tensor[idx, :seqlen] = torch.LongTensor(seq)
         biword_seq_tensor[idx, :seqlen] = torch.LongTensor(biseq)
@@ -204,7 +211,9 @@ def batchify_with_label(input_batch_list, gpu, volatile_flag=False):
     pad_chars = [chars[idx] + [[0]] * int(max_seq_len-len(chars[idx])) for idx in range(len(chars))]  # Tensor -> int
     length_list = [list(map(len, pad_char)) for pad_char in pad_chars]
     max_word_len = max(map(max, length_list))
-    char_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len, max_word_len)), volatile =  volatile_flag).long()
+    # char_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len, max_word_len)), volatile=volatile_flag).long()
+    with torch.set_grad_enabled(not volatile_flag):
+        char_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len, max_word_len))).long()
     char_seq_lengths = torch.LongTensor(length_list)
     for idx, (seq, seqlen) in enumerate(zip(pad_chars, char_seq_lengths)):
         for idy, (word, wordlen) in enumerate(zip(seq, seqlen)):
@@ -219,7 +228,7 @@ def batchify_with_label(input_batch_list, gpu, volatile_flag=False):
     
     ## keep the gaz_list in orignial order
     
-    gaz_list = [ gazs[i] for i in word_perm_idx]
+    gaz_list = [gazs[i] for i in word_perm_idx]
     gaz_list.append(volatile_flag)
     if gpu:
         word_seq_tensor = word_seq_tensor.cuda()
@@ -282,25 +291,24 @@ def train(data, save_model_dir, seg=True):
             right, whole = predict_check(tag_seq, batch_label, mask)
             right_token += right
             whole_token += whole
-            sample_loss += loss.data[0]
-            total_loss += loss.data[0]
+            sample_loss += loss.item()
+            total_loss += loss.item()
             batch_loss += loss
-
-            if end%500 == 0:
+            if end % 500 == 0:
                 temp_time = time.time()
                 temp_cost = temp_time - temp_start
                 temp_start = temp_time
                 print("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f"%(end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token))
                 sys.stdout.flush()
                 sample_loss = 0
-            if end%data.HP_batch_size == 0:
+            if end % data.HP_batch_size == 0:
                 batch_loss.backward()
                 optimizer.step()
                 model.zero_grad()
                 batch_loss = 0
         temp_time = time.time()
         temp_cost = temp_time - temp_start
-        print("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f"%(end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token))       
+        print("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f" % (end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token))
         epoch_finish = time.time()
         epoch_cost = epoch_finish - epoch_start
         print("Epoch: %s training finished. Time: %.2fs, speed: %.2fst/s,  total loss: %s"%(idx, epoch_cost, train_num/epoch_cost, total_loss))
@@ -322,7 +330,7 @@ def train(data, save_model_dir, seg=True):
                 print("Exceed previous best f score:", best_dev)
             else:
                 print("Exceed previous best acc score:", best_dev)
-            model_name = save_model_dir +'.'+ str(idx) + ".model"
+            model_name = save_model_dir + '.' + str(idx) + ".model"
             torch.save(model.state_dict(), model_name)
             best_dev = current_score 
         # ## decode test
@@ -332,7 +340,7 @@ def train(data, save_model_dir, seg=True):
         if seg:
             print("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(test_cost, speed, acc, p, r, f))
         else:
-            print("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f"%(test_cost, speed, acc))
+            print("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f" % (test_cost, speed, acc))
         gc.collect() 
 
 

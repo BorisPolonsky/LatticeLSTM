@@ -34,13 +34,13 @@ class WordLSTMCell(nn.Module):
         """
         Initialize parameters following the way proposed in the paper.
         """
-        init.orthogonal(self.weight_ih.data)
+        init.orthogonal_(self.weight_ih.data)
         weight_hh_data = torch.eye(self.hidden_size)
         weight_hh_data = weight_hh_data.repeat(1, 3)
         self.weight_hh.data.set_(weight_hh_data)
         # The bias is just set to zero vectors.
         if self.use_bias:
-            init.constant(self.bias.data, val=0)
+            init.constant_(self.bias.data, val=0)
 
     def forward(self, input_, hx):
         """
@@ -101,8 +101,8 @@ class MultiInputLSTMCell(nn.Module):
         """
         Initialize parameters following the way proposed in the paper.
         """
-        init.orthogonal(self.weight_ih.data)
-        init.orthogonal(self.alpha_weight_ih.data)
+        init.orthogonal_(self.weight_ih.data)
+        init.orthogonal_(self.alpha_weight_ih.data)
 
         weight_hh_data = torch.eye(self.hidden_size)
         weight_hh_data = weight_hh_data.repeat(1, 3)
@@ -114,8 +114,8 @@ class MultiInputLSTMCell(nn.Module):
 
         # The bias is just set to zero vectors.
         if self.use_bias:
-            init.constant(self.bias.data, val=0)
-            init.constant(self.alpha_bias.data, val=0)
+            init.constant_(self.bias.data, val=0)
+            init.constant_(self.alpha_bias.data, val=0)
 
     def forward(self, input_, c_input, hx):
         """
@@ -243,7 +243,9 @@ class LatticeLSTM(nn.Module):
             memory_out.append(cx)
             if skip_input[t]:
                 matched_num = len(skip_input[t][0])
-                word_var = autograd.Variable(torch.LongTensor(skip_input[t][0]),volatile =  volatile_flag)
+                # word_var = autograd.Variable(torch.LongTensor(skip_input[t][0]), volatile=volatile_flag)
+                with torch.set_grad_enabled(not volatile_flag):
+                    word_var = autograd.Variable(torch.LongTensor(skip_input[t][0]))
                 if self.gpu:
                     word_var = word_var.cuda()
                 word_emb = self.word_emb(word_var)
