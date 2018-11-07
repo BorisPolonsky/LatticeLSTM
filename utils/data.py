@@ -150,9 +150,9 @@ class Data:
         print("Refresh label alphabet finished: old:%s -> new:%s"%(old_size, self.label_alphabet_size))
 
 
-
     def build_alphabet(self, input_file):
-        in_lines = open(input_file, 'r', encoding='utf-8').readlines()
+        with open(input_file, 'r', encoding='utf-8') as f:
+            in_lines = f.readlines()
         for idx in range(len(in_lines)):
             line = in_lines[idx]
             if len(line) > 2:
@@ -191,18 +191,19 @@ class Data:
     def build_gaz_file(self, gaz_file):
         ## build gaz file,initial read gaz embedding file
         if gaz_file:
-            fins = open(gaz_file, 'r', encoding='utf-8').readlines()
-            for fin in fins:
-                fin = fin.strip().split()[0]
-                if fin:
-                    self.gaz.insert(fin, "one_source")
+            with open(gaz_file, 'r', encoding='utf-8') as fins:
+                for fin in fins:
+                    fin = fin.strip().split()[0]
+                    if fin:
+                        self.gaz.insert(fin, "one_source")
             print("Load gaz file: ", gaz_file, " total size:", self.gaz.size())
         else:
             print("Gaz file is None, load nothing")
 
 
     def build_gaz_alphabet(self, input_file):
-        in_lines = open(input_file, 'r', encoding='utf-8').readlines()
+        with open(input_file, 'r', encoding='utf-8') as f:
+            in_lines = f.readlines()
         word_list = []
         for line in in_lines:
             if len(line) > 3:
@@ -271,28 +272,27 @@ class Data:
 
 
     def write_decoded_results(self, output_file, predict_results, name):
-        fout = open(output_file, 'w')
-        sent_num = len(predict_results)
-        content_list = []
-        if name == 'raw':
-           content_list = self.raw_texts
-        elif name == 'test':
-            content_list = self.test_texts
-        elif name == 'dev':
-            content_list = self.dev_texts
-        elif name == 'train':
-            content_list = self.train_texts
-        else:
-            print("Error: illegal name during writing predict result, name should be within train/dev/test/raw !")
-        assert(sent_num == len(content_list))
-        for idx in range(sent_num):
-            sent_length = len(predict_results[idx])
-            for idy in range(sent_length):
-                ## content_list[idx] is a list with [word, char, label]
-                fout.write(content_list[idx][0][idy] + " " + predict_results[idx][idy] + '\n')
+        with open(output_file, 'w') as fout:
+            sent_num = len(predict_results)
+            content_list = []
+            if name == 'raw':
+               content_list = self.raw_texts
+            elif name == 'test':
+                content_list = self.test_texts
+            elif name == 'dev':
+                content_list = self.dev_texts
+            elif name == 'train':
+                content_list = self.train_texts
+            else:
+                print("Error: illegal name during writing predict result, name should be within train/dev/test/raw !")
+            assert(sent_num == len(content_list))
+            for idx in range(sent_num):
+                sent_length = len(predict_results[idx])
+                for idy in range(sent_length):
+                    ## content_list[idx] is a list with [word, char, label]
+                    fout.write(content_list[idx][0][idy] + " " + predict_results[idx][idy] + '\n')
 
-            fout.write('\n')
-        fout.close()
+                fout.write('\n')
         print("Predict %s result has been written into file. %s" % (name, output_file))
 
 

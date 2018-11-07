@@ -69,7 +69,8 @@ def read_instance(input_file, word_alphabet, char_alphabet, label_alphabet, numb
 
 
 def read_seg_instance(input_file, word_alphabet, biword_alphabet, char_alphabet, label_alphabet, number_normalized, max_sent_length, char_padding_size=-1, char_padding_symbol = '</pad>'):
-    in_lines = open(input_file, 'r', encoding='utf-8').readlines()
+    with open(input_file, 'r', encoding='utf-8') as f:
+        in_lines = f.readlines()
     instence_texts = []
     instence_Ids = []
     words = []
@@ -130,7 +131,8 @@ def read_seg_instance(input_file, word_alphabet, biword_alphabet, char_alphabet,
 
 
 def read_instance_with_gaz(input_file, gaz, word_alphabet, biword_alphabet, char_alphabet, gaz_alphabet, label_alphabet, number_normalized, max_sent_length, char_padding_size=-1, char_padding_symbol = '</pad>'):
-    in_lines = open(input_file, 'r', encoding='utf-8').readlines()
+    with open(input_file, 'r', encoding='utf-8') as f:
+        in_lines = f.readlines()
     instence_texts = []
     instence_Ids = []
     words = []
@@ -219,7 +221,8 @@ def read_instance_with_gaz(input_file, gaz, word_alphabet, biword_alphabet, char
 
 
 def read_instance_with_gaz_in_sentence(input_file, gaz, word_alphabet, biword_alphabet, char_alphabet, gaz_alphabet, label_alphabet, number_normalized, max_sent_length, char_padding_size=-1, char_padding_symbol = '</pad>'):
-    in_lines = open(input_file, 'r', encoding='utf-8').readlines()
+    with open(input_file, 'r', encoding='utf-8') as f:
+        in_lines = f.readlines()
     instence_texts = []
     instence_Ids = []
     for idx in range(len(in_lines)):
